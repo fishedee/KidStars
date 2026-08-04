@@ -52,18 +52,18 @@ export function ConfirmDialog({ message, onConfirm, onCancel }: { message: strin
   return <Modal title="请确认" onClose={onCancel}><p className="confirm-copy">{message}</p><div className="modal-actions"><button className="button secondary" onClick={onCancel}>取消</button><button className="button danger" onClick={onConfirm}>确认</button></div></Modal>;
 }
 
-export const speak = (text: string, lang: 'zh-CN' | 'en-US' = 'zh-CN') => {
+export const speak = (text: string, lang: 'zh-CN' | 'en-US' = 'zh-CN', rate = 0.8) => {
   if (!('speechSynthesis' in window)) return false;
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = lang;
-  utterance.rate = 0.8;
+  utterance.rate = rate;
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
   return true;
 };
 
-export function SpeakButton({ text, lang = 'zh-CN' }: { text: string; lang?: 'zh-CN' | 'en-US' }) {
-  return <button className="icon-btn" onClick={(event) => { event.stopPropagation(); speak(text, lang); }} title="朗读"><Volume2 /></button>;
+export function SpeakButton({ text, lang = 'zh-CN', rate = 0.8 }: { text: string; lang?: 'zh-CN' | 'en-US'; rate?: number }) {
+  return <button className="icon-btn" onClick={(event) => { event.stopPropagation(); speak(text, lang, rate); }} title="朗读"><Volume2 /></button>;
 }
 
 export function HanziCanvas({ character }: { character: string }) {

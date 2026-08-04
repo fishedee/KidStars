@@ -15,6 +15,16 @@ describe('learning progress store',() => {
     expect(localStorage.getItem(PROFILE_KEY)).not.toBeNull();
   });
 
+  it('adds course reading progress to profiles saved before the feature existed',() => {
+    const now = new Date('2026-08-04T12:00:00');
+    const profile = createDefaultProfile(now);
+    const legacyProfile = { ...profile,wordGame:{ unlocked:profile.wordGame.unlocked,done:profile.wordGame.done } };
+    localStorage.setItem(PROFILE_KEY,JSON.stringify(legacyProfile));
+    const state = initializeState(now,localStorage);
+    expect(state.profile.wordGame.readItems).toEqual([]);
+    expect(state.profile.wordGame.unlocked).toBe(1);
+  });
+
   it('calculates quiz, study, reading and wellness rewards',() => {
     const daily = createDefaultDaily(new Date('2026-08-04T12:00:00'));
     daily.math = { ...daily.math,score:10,completed:true };

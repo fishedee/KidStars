@@ -12,6 +12,7 @@ export type PageId =
 export type MathMode = 'addsub' | 'muldiv' | 'mixed';
 export type ThinkMode = 'pattern' | 'logic' | 'word' | 'puzzle';
 export type DollCategory = 'hair' | 'top' | 'bottom' | 'shoes' | 'acc' | 'makeup';
+export type EnglishContentKind = 'word' | 'phrase' | 'sentence' | 'pattern';
 
 export interface QuizProgress<M extends string> {
   score: number;
@@ -83,7 +84,7 @@ export interface Profile {
   weekCheckins: Record<string, boolean>;
   weekStart: string;
   lastActiveDate: string | null;
-  wordGame: { unlocked: number; done: number[] };
+  wordGame: { unlocked: number; done: number[]; readItems: string[] };
   books: Book[];
 }
 
@@ -109,6 +110,19 @@ export interface EnglishWord {
   en: string;
   cn: string;
   emoji: string;
+}
+
+export interface EnglishCourseItem extends EnglishWord {
+  id: string;
+  spokenText?: string;
+}
+
+export interface EnglishCourse {
+  level: number;
+  title: string;
+  englishTitle: string;
+  emoji: string;
+  items: Record<EnglishContentKind, EnglishCourseItem[]>;
 }
 
 export interface ShopItem {

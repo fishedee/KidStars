@@ -47,7 +47,7 @@ export const createDefaultProfile = (date = new Date()): Profile => ({
   weekCheckins: {},
   weekStart: getMonday(date),
   lastActiveDate: null,
-  wordGame: { unlocked: 1, done: [] },
+  wordGame: { unlocked: 1, done: [], readItems: [] },
   books: [],
 });
 
