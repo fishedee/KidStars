@@ -6,5 +6,15 @@ export default defineConfig({
   plugins: [pluginReact()],
   html: {
     template: './index.html',
+    inject: 'body',
+    scriptLoading: 'blocking',
+  },
+  output: {
+    inlineScripts: true,
+    inlineStyles: true,
+    legalComments: 'inline',
+  },
+  server: {
+    publicDir: false,
   },
 });
