@@ -1,5 +1,6 @@
 export type PageId =
   | 'home'
+  | 'challenge'
   | 'math'
   | 'chinese'
   | 'english'
@@ -11,6 +12,8 @@ export type PageId =
 
 export type MathMode = 'addsub' | 'muldiv' | 'mixed';
 export type ThinkMode = 'pattern' | 'logic' | 'word' | 'puzzle';
+export type GradeId = 1 | 2 | 3 | 4 | 5 | 6;
+export type TermId = 'upper' | 'lower';
 export type DollCategory = 'hair' | 'top' | 'bottom' | 'shoes' | 'acc' | 'makeup';
 export type EnglishContentKind = 'word' | 'phrase' | 'sentence' | 'pattern';
 
@@ -28,8 +31,7 @@ export interface CustomVocab {
   done: boolean;
 }
 
-export interface DailyProgress {
-  date: string;
+export interface GradeDailyProgress {
   math: QuizProgress<MathMode>;
   think: QuizProgress<ThinkMode>;
   chinese: {
@@ -49,6 +51,22 @@ export interface DailyProgress {
     reading: boolean;
     book: string;
   };
+  challenge: {
+    completed: boolean;
+    score: number;
+    total: number;
+    bestCombo: number;
+  };
+}
+
+export interface DailyProgress {
+  date: string;
+  gradeProgress: Partial<Record<GradeId, GradeDailyProgress>>;
+  /** @deprecated Compatibility aliases for v2 integrations. */
+  math: GradeDailyProgress['math'];
+  think: GradeDailyProgress['think'];
+  chinese: GradeDailyProgress['chinese'];
+  english: GradeDailyProgress['english'];
   reading: {
     minutes: number;
     bookId: string | null;
@@ -71,6 +89,8 @@ export interface Book {
 
 export interface Profile {
   version: 2;
+  selectedGrade: GradeId;
+  selectedTerm: TermId;
   coinBase: number;
   doll: {
     level: number;
@@ -84,7 +104,11 @@ export interface Profile {
   weekCheckins: Record<string, boolean>;
   weekStart: string;
   lastActiveDate: string | null;
+  wordGameByGrade: Partial<Record<GradeId, { unlocked: number; done: number[]; readItems: string[] }>>;
+  /** @deprecated Compatibility alias for the migrated third-grade course. */
   wordGame: { unlocked: number; done: number[]; readItems: string[] };
+  achievements: string[];
+  streak: { current: number; best: number; lastDate: string | null };
   books: Book[];
 }
 
@@ -94,12 +118,18 @@ export interface AppState {
 }
 
 export interface VocabLesson {
+  id: string;
+  grade: GradeId;
+  term: TermId;
   unit: number;
   title: string;
   words: Array<[string, string]>;
 }
 
 export interface Poem {
+  id: string;
+  grade: GradeId;
+  term: TermId;
   title: string;
   author: string;
   content: string;
@@ -118,11 +148,22 @@ export interface EnglishCourseItem extends EnglishWord {
 }
 
 export interface EnglishCourse {
+  grade: GradeId;
+  term: TermId;
   level: number;
   title: string;
   englishTitle: string;
   emoji: string;
   items: Record<EnglishContentKind, EnglishCourseItem[]>;
+}
+
+export interface CurriculumUnit {
+  id: string;
+  grade: GradeId;
+  term: TermId;
+  unit: number;
+  title: string;
+  topics: string[];
 }
 
 export interface ShopItem {

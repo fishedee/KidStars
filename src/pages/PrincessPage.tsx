@@ -33,7 +33,7 @@ function DollAvatar({ equipped }: { equipped: Record<DollCategory,string|null> }
 }
 
 export default function PrincessPage({ notify,confirm }: { notify:(message:string,celebrate?:boolean)=>void;confirm:Confirm }) {
-  const { state,updateProfile } = useAppStore();
+  const { state, gradeDaily, updateProfile } = useAppStore();
   const [tab,setTab] = useState<'shop'|'cottage'|'garden'>('shop');
   const [category,setCategory] = useState<DollCategory>('hair');
   const [decorSlot,setDecorSlot] = useState<{ area:'cottage'|'garden';slot:DecorSlot } | null>(null);
@@ -41,11 +41,11 @@ export default function PrincessPage({ notify,confirm }: { notify:(message:strin
   const balance = getBalance(state);
   const level = [...LEVELS].reverse().find((entry) => profile.doll.level >= entry.min) ?? LEVELS[0];
   const stats = useMemo(() => ({
-    study:Math.min(100,Object.keys(state.daily.chinese.vocabDone).length*3+state.daily.math.score*3+state.daily.think.score*3),
-    art:Math.min(100,(state.daily.english.gameDone?35:0)+(state.daily.reading.done?35:0)+state.daily.reading.minutes),
+    study:Math.min(100,Object.keys(gradeDaily.chinese.vocabDone).length*3+gradeDaily.math.score*3+gradeDaily.think.score*3),
+    art:Math.min(100,(gradeDaily.english.gameDone?35:0)+(state.daily.reading.done?35:0)+state.daily.reading.minutes),
     strength:Math.min(100,state.daily.exercise.filter((item) => item.done).length*20+(state.daily.health.foot.done?20:0)+(state.daily.health.massage.done?20:0)),
     grace:Math.min(100,Math.floor(profile.doll.charm/5)),
-  }),[profile.doll.charm,state.daily]);
+  }),[profile.doll.charm,state.daily,gradeDaily]);
   const buy = (cost:number,name:string,after:(profile:typeof state.profile)=>typeof state.profile) => {
     if (balance < cost) { notify('星光币不足，多完成任务再来看看'); return; }
     confirm(`确定花费 ${cost} 枚星光币购买“${name}”吗？`,() => updateProfile((current) => {

@@ -1,6 +1,30 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { X, Volume2 } from 'lucide-react';
 import HanziWriter from 'hanzi-writer';
+import { GRADES, TERMS, gradeLabel, termLabel } from './curriculum';
+import type { GradeId, TermId } from './types';
+
+export function GradeSelector({ grade, term, onGradeChange, onTermChange, compact = false }: {
+  grade: GradeId;
+  term: TermId;
+  onGradeChange: (grade: GradeId) => void;
+  onTermChange: (term: TermId) => void;
+  compact?: boolean;
+}) {
+  return (
+    <div className={`grade-selector ${compact ? 'compact' : ''}`} aria-label="课程范围">
+      <label>
+        <span className="sr-only">选择年级</span>
+        <select value={grade} onChange={(event) => onGradeChange(Number(event.target.value) as GradeId)}>
+          {GRADES.map((item) => <option key={item} value={item}>{gradeLabel(item)}</option>)}
+        </select>
+      </label>
+      <div className="term-switch" aria-label="选择学期">
+        {TERMS.map((item) => <button key={item} className={term === item ? 'active' : ''} aria-pressed={term === item} onClick={() => onTermChange(item)}>{termLabel(item)}</button>)}
+      </div>
+    </div>
+  );
+}
 
 export function SectionTitle({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return <h1 className="section-title"><span aria-hidden="true">{icon}</span>{children}</h1>;

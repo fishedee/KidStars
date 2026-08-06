@@ -25,6 +25,20 @@ describe('learning progress store',() => {
     expect(state.profile.wordGame.unlocked).toBe(1);
   });
 
+  it('migrates v2 learning progress into third grade without losing rewards',() => {
+    const now = new Date('2026-08-04T12:00:00');
+    const legacyProfile = { ...createDefaultProfile(now),version:2,coinBase:37,lastActiveDate:'2026-08-04',wordGame:{unlocked:2,done:[1],readItems:['l1-word-1']} };
+    const legacyDaily = createDefaultDaily(now);
+    legacyDaily.math = { ...legacyDaily.math,score:8,completed:true };
+    localStorage.setItem('learning-quest:v2:profile',JSON.stringify(legacyProfile));
+    localStorage.setItem('learning-quest:v2:daily:2026-08-04',JSON.stringify({ ...legacyDaily,gradeProgress:undefined }));
+    const state = initializeState(now,localStorage);
+    expect(state.profile.selectedGrade).toBe(3);
+    expect(state.profile.coinBase).toBe(37);
+    expect(state.daily.gradeProgress[3]?.math.score).toBe(8);
+    expect(state.profile.wordGameByGrade[3]?.readItems).toContain('l1-word-1');
+  });
+
   it('calculates quiz, study, reading and wellness rewards',() => {
     const daily = createDefaultDaily(new Date('2026-08-04T12:00:00'));
     daily.math = { ...daily.math,score:10,completed:true };

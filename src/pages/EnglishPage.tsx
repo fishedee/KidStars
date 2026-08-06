@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Eye, EyeOff, RefreshCw, Volume2 } from 'lucide-react';
-import { ENGLISH_COURSES } from '../data';
+import { getEnglishCourses, gradeLabel, termLabel } from '../curriculum';
 import { useAppStore } from '../store';
 import type { EnglishContentKind, EnglishCourseItem, EnglishWord } from '../types';
 import { CheckRow, SectionTitle, speak } from '../ui';
@@ -19,8 +19,10 @@ const contentLabels: Record<EnglishContentKind, string> = {
 const shuffled = <T,>(items: T[]) => [...items].sort(() => Math.random() - 0.5);
 
 export default function EnglishPage({ notify }: { notify: (message: string, celebrate?: boolean) => void }) {
-  const { state, updateDaily, updateProfile } = useAppStore();
-  const english = state.daily.english;
+  const { state, gradeDaily, updateGradeDaily, updateProfile, wordGame } = useAppStore();
+  const english = gradeDaily.english;
+  const grade = state.profile.selectedGrade;
+  const courses = useMemo(() => getEnglishCourses(grade, state.profile.selectedTerm), [grade, state.profile.selectedTerm]);
   const [tab, setTab] = useState<'learn' | 'game'>('learn');
   const [contentKind, setContentKind] = useState<EnglishContentKind>('word');
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
@@ -36,11 +38,11 @@ export default function EnglishPage({ notify }: { notify: (message: string, cele
   const [memoryOpen, setMemoryOpen] = useState<string[]>([]);
   const [memoryMatched, setMemoryMatched] = useState<string[]>([]);
 
-  const course = ENGLISH_COURSES.find((entry) => entry.level === english.gameLevel) ?? ENGLISH_COURSES[0];
+  const course = courses.find((entry) => entry.level === english.gameLevel) ?? courses[0];
   const courseItems = useMemo(() => Object.values(course.items).flat(), [course]);
   const visibleItems = course.items[contentKind];
   const activeItem = visibleItems.find((item) => item.id === activeItemId) ?? visibleItems[0];
-  const readItems = state.profile.wordGame.readItems;
+  const readItems = wordGame.readItems;
   const readSet = useMemo(() => new Set(readItems), [readItems]);
   const readCount = courseItems.filter((item) => readSet.has(item.id)).length;
   const progress = Math.round(readCount / courseItems.length * 100);
@@ -52,7 +54,7 @@ export default function EnglishPage({ notify }: { notify: (message: string, cele
   }, [english.todayWords, levelWords]);
 
   const chooseCourse = (level: number) => {
-    updateDaily((daily) => ({ ...daily, english: { ...daily.english, gameLevel: level, todayWords: [] } }));
+    updateGradeDaily((daily) => ({ ...daily, english: { ...daily.english, gameLevel: level, todayWords: [] } }));
     setContentKind('word');
     setActiveItemId(null);
     setGameWords([]);
@@ -64,18 +66,21 @@ export default function EnglishPage({ notify }: { notify: (message: string, cele
     if (!canSpeak) notify('当前浏览器不支持语音播放');
     const nextReadItems = readSet.has(item.id) ? readItems : [...readItems, item.id];
     if (!readSet.has(item.id)) {
-      updateProfile((profile) => ({ ...profile, wordGame: { ...profile.wordGame, readItems: nextReadItems } }));
+      updateProfile((profile) => {
+        const nextGame = { ...wordGame, readItems: nextReadItems };
+        return { ...profile, wordGameByGrade: { ...profile.wordGameByGrade, [grade]: nextGame }, wordGame: grade === 3 ? nextGame : profile.wordGame };
+      });
     }
     const completed = courseItems.every((courseItem) => nextReadItems.includes(courseItem.id));
     if (completed && !english.learnDone) {
-      updateDaily((daily) => ({ ...daily, english: { ...daily.english, learnDone: true } }));
+      updateGradeDaily((daily) => ({ ...daily, english: { ...daily.english, learnDone: true } }));
       notify('本集点读完成，去闯关吧！', true);
     }
   };
 
   const refreshWords = () => {
     const indices = shuffled(levelWords.map((_, index) => index)).slice(0, 6);
-    updateDaily((daily) => ({ ...daily, english: { ...daily.english, todayWords: indices } }));
+    updateGradeDaily((daily) => ({ ...daily, english: { ...daily.english, todayWords: indices } }));
     setGameWords([]);
     notify('已刷新本轮单词');
   };
@@ -83,11 +88,13 @@ export default function EnglishPage({ notify }: { notify: (message: string, cele
   const finishGame = (finalScore: number, total: number) => {
     const passed = finalScore >= Math.ceil(total * 0.6);
     if (passed) {
-      updateDaily((daily) => ({ ...daily, english: { ...daily.english, learnDone: true, gameDone: true, gameScore: finalScore } }));
+      updateGradeDaily((daily) => ({ ...daily, english: { ...daily.english, learnDone: true, gameDone: true, gameScore: finalScore } }));
       updateProfile((profile) => {
-        const done = profile.wordGame.done.includes(english.gameLevel) ? profile.wordGame.done : [...profile.wordGame.done, english.gameLevel];
-        const unlocked = finalScore === total ? Math.min(6, Math.max(profile.wordGame.unlocked, english.gameLevel + 1)) : profile.wordGame.unlocked;
-        return { ...profile, wordGame: { ...profile.wordGame, done, unlocked } };
+        const current = profile.wordGameByGrade[grade] ?? { unlocked: 1, done: [], readItems: [] };
+        const done = current.done.includes(english.gameLevel) ? current.done : [...current.done, english.gameLevel];
+        const unlocked = finalScore === total ? Math.min(courses.length, Math.max(current.unlocked, english.gameLevel + 1)) : current.unlocked;
+        const nextGame = { ...current, done, unlocked };
+        return { ...profile, wordGameByGrade: { ...profile.wordGameByGrade, [grade]: nextGame }, wordGame: grade === 3 ? nextGame : profile.wordGame };
       });
     }
     setRound(total);
@@ -149,16 +156,16 @@ export default function EnglishPage({ notify }: { notify: (message: string, cele
 
   return (
     <div className="english-page">
-      <SectionTitle icon="🎧">英语大冒险</SectionTitle>
+      <SectionTitle icon="🎧">{gradeLabel(grade)}英语大冒险</SectionTitle>
       <div className="segmented english-mode-switch" aria-label="英语学习模式">
         <button className={tab === 'learn' ? 'active' : ''} onClick={() => setTab('learn')}>课程点读</button>
         <button className={tab === 'game' ? 'active' : ''} onClick={() => setTab('game')}>闯关游戏</button>
       </div>
 
-      <div className="level-row english-course-switcher" aria-label="英语课程">
-        {ENGLISH_COURSES.map((entry) => {
-          const unlocked = state.profile.wordGame.unlocked >= entry.level;
-          const done = state.profile.wordGame.done.includes(entry.level);
+      <div className="level-row english-course-switcher" aria-label={`${termLabel(state.profile.selectedTerm)}英语课程`}>
+        {courses.map((entry) => {
+          const unlocked = wordGame.unlocked >= entry.level;
+          const done = wordGame.done.includes(entry.level);
           return (
             <button
               key={entry.level}
@@ -283,8 +290,8 @@ export default function EnglishPage({ notify }: { notify: (message: string, cele
       )}
 
       <section className="panel english-reading-panel">
-        <CheckRow checked={english.reading} label="完成今日 ABC 阅读" detail="绘本、分级读物或课外英语阅读" onChange={() => updateDaily((daily) => ({ ...daily, english: { ...daily.english, reading: !daily.english.reading } }))} />
-        <input className="wide-input" aria-label="今日英语读物" placeholder="今天读了什么？" value={english.book} onChange={(event) => updateDaily((daily) => ({ ...daily, english: { ...daily.english, book: event.target.value } }))} />
+        <CheckRow checked={english.reading} label="完成今日 ABC 阅读" detail="绘本、分级读物或课外英语阅读" onChange={() => updateGradeDaily((daily) => ({ ...daily, english: { ...daily.english, reading: !daily.english.reading } }))} />
+        <input className="wide-input" aria-label="今日英语读物" placeholder="今天读了什么？" value={english.book} onChange={(event) => updateGradeDaily((daily) => ({ ...daily, english: { ...daily.english, book: event.target.value } }))} />
       </section>
     </div>
   );

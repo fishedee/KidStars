@@ -1,6 +1,6 @@
 import type { DollCategory, EnglishContentKind, EnglishCourse, EnglishCourseItem, EnglishWord, Poem, ShopItem, VocabLesson } from './types';
 
-export const TEXTBOOK_VOCAB: VocabLesson[] = [
+const GRADE_THREE_VOCAB: Array<Pick<VocabLesson, 'unit' | 'title' | 'words'>> = [
   { unit: 1, title: '1. 大青树下的小学', words: [['晨','chen'],['绒','rong'],['球','qiu'],['汉','han'],['艳','yan'],['服','fu'],['装','zhuang'],['扮','ban'],['敬','jing'],['停','ting'],['孔','kong'],['雀','que'],['粗','cu']] },
   { unit: 1, title: '2. 花的学校', words: [['荒','huang'],['笛','di'],['舞','wu'],['狂','kuang'],['功','gong'],['罚','fa'],['假','jia'],['互','hu'],['所','suo'],['够','gou'],['猜','cai'],['扬','yang'],['臂','bi']] },
   { unit: 2, title: '4. 古诗三首', words: [['寒','han'],['径','jing'],['斜','xie'],['霜','shuang'],['赠','zeng'],['盖','gai'],['菊','ju'],['残','can'],['君','jun'],['橙','cheng'],['送','song'],['挑','tiao'],['落','luo']] },
@@ -20,7 +20,14 @@ export const TEXTBOOK_VOCAB: VocabLesson[] = [
   { unit: 8, title: '23. 司马光', words: [['司','si'],['登','deng'],['跌','die'],['皆','jie'],['弃','qi'],['持','chi'],['击','ji']] },
 ];
 
-export const POEMS: Poem[] = [
+export const TEXTBOOK_VOCAB: VocabLesson[] = GRADE_THREE_VOCAB.map((lesson, index) => ({
+  ...lesson,
+  id: `g3-upper-chinese-${index + 1}`,
+  grade: 3,
+  term: 'upper',
+}));
+
+const GRADE_THREE_POEMS: Array<Omit<Poem, 'id' | 'grade' | 'term'>> = [
   { title: '所见', author: '清·袁枚', content: '牧童骑黄牛，歌声振林樾。\n意欲捕鸣蝉，忽然闭口立。', note: '诗人用短短四句刻画了牧童由歌唱到屏息捕蝉的天真神态。' },
   { title: '山行', author: '唐·杜牧', content: '远上寒山石径斜，白云生处有人家。\n停车坐爱枫林晚，霜叶红于二月花。', note: '深秋山行中，诗人以鲜明色彩写出枫林胜过春花的蓬勃之美。' },
   { title: '赠刘景文', author: '宋·苏轼', content: '荷尽已无擎雨盖，菊残犹有傲霜枝。\n一年好景君须记，最是橙黄橘绿时。', note: '诗人借橙黄橘绿的成熟时节勉励朋友珍惜人生好景。' },
@@ -31,6 +38,13 @@ export const POEMS: Poem[] = [
   { title: '早发白帝城', author: '唐·李白', content: '朝辞白帝彩云间，千里江陵一日还。\n两岸猿声啼不住，轻舟已过万重山。', note: '轻舟飞驰穿山而过，传达诗人遇赦归来的畅快心情。' },
   { title: '采莲曲', author: '唐·王昌龄', content: '荷叶罗裙一色裁，芙蓉向脸两边开。\n乱入池中看不见，闻歌始觉有人来。', note: '采莲少女与荷叶荷花融为一体，画面清新灵动。' },
 ];
+
+export const POEMS: Poem[] = GRADE_THREE_POEMS.map((poem, index) => ({
+  ...poem,
+  id: `g3-upper-poem-${index + 1}`,
+  grade: 3,
+  term: 'upper',
+}));
 
 export const ENGLISH_LEVELS: Array<{ level: number; words: EnglishWord[] }> = [
   { level: 1, words: [['cat','猫','🐱'],['dog','狗','🐶'],['bird','鸟','🐦'],['fish','鱼','🐟'],['bear','熊','🐻'],['duck','鸭子','🦆'],['pig','猪','🐷'],['rabbit','兔子','🐰'],['monkey','猴子','🐵'],['tiger','老虎','🐯'],['panda','熊猫','🐼'],['lion','狮子','🦁']].map(([en,cn,emoji]) => ({ en, cn, emoji })) },
@@ -49,7 +63,7 @@ const courseItems = (level: number, kind: EnglishContentKind, rows: CourseRow[])
 const wordItems = (level: number, words: EnglishWord[]): EnglishCourseItem[] =>
   words.map((word, index) => ({ ...word, id: `l${level}-word-${index + 1}` }));
 
-export const ENGLISH_COURSES: EnglishCourse[] = [
+const BASE_ENGLISH_COURSES: Array<Omit<EnglishCourse, 'grade' | 'term'>> = [
   {
     level: 1, title: '动物伙伴', englishTitle: 'Animal Friends', emoji: '🐾',
     items: {
@@ -159,6 +173,12 @@ export const ENGLISH_COURSES: EnglishCourse[] = [
     },
   },
 ];
+
+export const ENGLISH_COURSES: EnglishCourse[] = BASE_ENGLISH_COURSES.map((course) => ({
+  ...course,
+  grade: 3,
+  term: 'upper',
+}));
 
 export const SHOP_CATEGORIES: Array<{ id: DollCategory; name: string }> = [
   { id: 'hair', name: '发型' }, { id: 'top', name: '上衣' }, { id: 'bottom', name: '裙子' },
