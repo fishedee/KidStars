@@ -1,6 +1,6 @@
 import { beforeEach,describe,expect,it } from 'vitest';
 import { appReducer,calculateDailyCoins,createDefaultDaily,createDefaultProfile,DAILY_KEY_PREFIX,formatDate,getBalance,initializeState,isAllDone,PROFILE_KEY } from './store';
-import { POEMS,TEXTBOOK_VOCAB } from './data';
+import { POEMS,TEXTBOOK_VOCAB } from './data/chinese';
 
 describe('learning progress store',() => {
   beforeEach(() => localStorage.clear());
